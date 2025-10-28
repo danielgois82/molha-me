@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molha.me - Dashboard IoT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .status-bar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #27ae60;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .sensor-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .sensor-unit {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .threshold-info {
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        .threshold-ok {
+            color: #27ae60;
+        }
+        
+        .threshold-alert {
+            color: #e74c3c;
+        }
+        
+        .controls {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .controls h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .threshold-input {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-group label {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            padding: 10px;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .history {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        
+        .history h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .history-item {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 0.9em;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-header {
+            font-weight: bold;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .threshold-input {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 Molha.me</h1>
+            <p>Sistema IoT de Monitoramento de Plantas</p>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="api-status">Conectando...</span>
+            </div>
+            <div id="last-update">Última atualização: --</div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>🌡️ Temperatura</h3>
+                <div class="sensor-value" id="temperatura">--</div>
+                <div class="sensor-unit">°C</div>
+                <div class="threshold-info" id="temp-threshold">
+                    Limite: <span id="temp-limit">--</span>°C
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>💧 Umidade</h3>
+                <div class="sensor-value" id="umidade">--</div>
+                <div class="sensor-unit">%</div>
+                <div class="threshold-info" id="umid-threshold">
+                    Mínimo: <span id="umid-limit">--</span>%
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>☀️ Luminosidade</h3>
+                <div class="sensor-value" id="luminosidade">--</div>
+                <div class="sensor-unit">lux</div>
+                <div class="threshold-info" id="lum-threshold">
+                    Mínimo: <span id="lum-limit">--</span> lux
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📏 Distância</h3>
+                <div class="sensor-value" id="distancia">--</div>
+                <div class="sensor-unit">cm</div>
+                <div class="threshold-info" id="dist-threshold">
+                    Range: <span id="dist-min">--</span> - <span id="dist-max">--</span> cm
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <h3>⚙️ Configurações</h3>
+            <div class="threshold-input">
+                <div class="input-group">
+                    <label for="temp-max">Temperatura Máxima (°C)</label>
+                    <input type="number" id="temp-max" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="umid-min">Umidade Mínima (%)</label>
+                    <input type="number" id="umid-min" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="lum-min">Luminosidade Mínima (lux)</label>
+                    <input type="number" id="lum-min" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="dist-min">Distância Mínima (cm)</label>
+                    <input type="number" id="dist-min" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="dist-max">Distância Máxima (cm)</label>
+                    <input type="number" id="dist-max" step="0.1">
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="atualizarThresholds()">Atualizar Thresholds</button>
+            <button class="btn" onclick="carregarDados()">Atualizar Dados</button>
+        </div>
+        
+        <div class="history">
+            <h3>📊 Histórico Recente</h3>
+            <div id="history-content" class="loading">Carregando histórico...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        
+        // Carregar dados iniciais
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarDados();
+            carregarThresholds();
+            
+            // Atualizar a cada 5 segundos
+            setInterval(carregarDados, 5000);
+        });
+        
+        async function carregarDados() {
+            try {
+                const response = await fetch(`${API_URL}/api/get-data`);
+                const data = await response.json();
+                
+                // Atualizar status
+                document.getElementById('api-status').textContent = 'API Online';
+                document.getElementById('last-update').textContent = 
+                    `Última atualização: ${new Date().toLocaleString()}`;
+                
+                // Atualizar dados dos sensores
+                if (data.dados_atuais) {
+                    atualizarSensor('temperatura', data.dados_atuais.temperatura, 'temp-threshold', data.thresholds.temperatura_max, '>');
+                    atualizarSensor('umidade', data.dados_atuais.umidade, 'umid-threshold', data.thresholds.umidade_min, '<');
+                    atualizarSensor('luminosidade', data.dados_atuais.luminosidade, 'lum-threshold', data.thresholds.luminosidade_min, '<');
+                    atualizarSensor('distancia', data.dados_atuais.distancia, 'dist-threshold', data.thresholds.distancia_min, 'range');
+                }
+                
+                // Atualizar histórico
+                atualizarHistorico(data.historico);
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                document.getElementById('api-status').textContent = 'API Offline';
+                document.getElementById('last-update').textContent = 'Erro de conexão';
+            }
+        }
+        
+        function atualizarSensor(id, valor, thresholdId, limite, tipo) {
+            if (valor !== undefined) {
+                document.getElementById(id).textContent = valor.toFixed(1);
+                
+                const thresholdElement = document.getElementById(thresholdId);
+                let alerta = false;
+                
+                if (tipo === '>') {
+                    alerta = valor > limite;
+                } else if (tipo === '<') {
+                    alerta = valor < limite;
+                } else if (tipo === 'range') {
+                    const distMax = document.getElementById('dist-max').value || limite;
+                    alerta = valor < limite || valor > distMax;
+                }
+                
+                thresholdElement.className = `threshold-info ${alerta ? 'threshold-alert' : 'threshold-ok'}`;
+            }
+        }
+        
+        function atualizarHistorico(historico) {
+            const historyContent = document.getElementById('history-content');
+            
+            if (historico.length === 0) {
+                historyContent.innerHTML = '<div class="loading">Nenhum dado disponível</div>';
+                return;
+            }
+            
+            let html = '<div class="history-item history-header">';
+            html += '<div>Timestamp</div><div>Temp</div><div>Umid</div><div>Lum</div><div>Dist</div><div>API</div>';
+            html += '</div>';
+            
+            historico.slice(-10).reverse().forEach(item => {
+                html += '<div class="history-item">';
+                html += `<div>${new Date(item.timestamp).toLocaleTimeString()}</div>`;
+                html += `<div>${item.temperatura?.toFixed(1) || '--'}</div>`;
+                html += `<div>${item.umidade?.toFixed(1) || '--'}</div>`;
+                html += `<div>${item.luminosidade?.toFixed(0) || '--'}</div>`;
+                html += `<div>${item.distancia?.toFixed(1) || '--'}</div>`;
+                html += `<div>${item.api_online ? '✅' : '❌'}</div>`;
+                html += '</div>';
+            });
+            
+            historyContent.innerHTML = html;
+        }
+        
+        async function carregarThresholds() {
+            try {
+                const response = await fetch(`${API_URL}/api/get-thresholds`);
+                const thresholds = await response.json();
+                
+                document.getElementById('temp-max').value = thresholds.temperatura_max;
+                document.getElementById('umid-min').value = thresholds.umidade_min;
+                document.getElementById('lum-min').value = thresholds.luminosidade_min;
+                document.getElementById('dist-min').value = thresholds.distancia_min;
+                document.getElementById('dist-max').value = thresholds.distancia_max;
+                
+            } catch (error) {
+                console.error('Erro ao carregar thresholds:', error);
+            }
+        }
+        
+        async function atualizarThresholds() {
+            const thresholds = {
+                temperatura_max: parseFloat(document.getElementById('temp-max').value),
+                umidade_min: parseFloat(document.getElementById('umid-min').value),
+                luminosidade_min: parseFloat(document.getElementById('lum-min').value),
+                distancia_min: parseFloat(document.getElementById('dist-min').value),
+                distancia_max: parseFloat(document.getElementById('dist-max').value)
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/api/update-thresholds`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(thresholds)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Thresholds atualizados com sucesso!');
+                    carregarDados(); // Recarregar dados
+                } else {
+                    alert('Erro ao atualizar thresholds');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao atualizar thresholds:', error);
+                alert('Erro de conexão');
+            }
+        }
+    </script>
+</body>
+</html>

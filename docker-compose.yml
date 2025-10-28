@@ -1,0 +1,41 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: molha-me-dashboard-apache:2.4
+    container_name: molha-me-dashboard-container
+    ports:
+      - "80:80"
+    networks:
+      - molha-me-network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: molha-me-api-node:22.20.0
+    container_name: molha-me-api-container
+    ports:
+      - "3000:3000"
+    networks:
+      - molha-me-network
+    depends_on:
+      - database
+
+  database:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    image: molha-me-database-postgres:17.6
+    container_name: molha-me-database-container
+    ports:
+      - "5432:5432"
+    networks:
+      - molha-me-network
+
+networks:
+  molha-me-network:
+    driver: bridge

@@ -30,6 +30,9 @@ services:
       context: ./database
       dockerfile: Dockerfile
     image: molha-me-database-postgres:17.6
+    environment:
+      POSTGRES_DB: molha_me_db
+      POSTGRES_PASSWORD: 123456
     container_name: molha-me-database-container
     ports:
       - "5432:5432"
